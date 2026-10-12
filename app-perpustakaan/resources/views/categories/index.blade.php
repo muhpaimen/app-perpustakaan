@@ -46,5 +46,5 @@
         </tbody>
     </table>
 
-    <p><em>Data dummy, belum masuk db</em></p>
+    {{ $categories->links() }}
 @endsection
