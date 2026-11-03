@@ -3,9 +3,19 @@
 @section('title', 'Daftar Anggota')
 
 @section('content')
-
     <h1>Daftar Anggota</h1>
 
+    @if (session('success'))
+        <div class="success">{{ session('success') }}</div>
+    @endif
+
+    <p><a href="{{ route('members.create') }}" class="btn">+ Tambah Anggota</a></p>
+
+    <form method="get" action="{{ route('members.index') }}">
+        <button type="submit" class="btn">Cari</button>
+        <input name="search" type="text" value="{{ request('search') }}">
+    </form>
+        
     <table>
         <thead>
             <tr>
@@ -26,6 +36,15 @@
                     <td>{{ $member['email'] }}</td>
                     <td>{{ $member['nomor_telepon'] }}</td>
                     <td>{{ ucfirst($member['status']) }}</td>
+                    <td>
+                        <a href="{{ route('members.edit', $member['id']) }}">Edit</a>
+                        |
+                        <form style="display:inline" action="{{ route('members.destroy', $member['id']) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit">Hapus</button>
+                        </form>
+                    </td>
                 </tr>
             @empty
                 <tr>
@@ -35,5 +54,5 @@
         </tbody>
     </table>
 
-    <p><em>Catatan: data di atas masih data dummy (array statis di Controller). Form tambah/edit anggota dan CRUD lengkap anggota baru dibuat mulai Pertemuan 5.</em></p>
+    
 @endsection

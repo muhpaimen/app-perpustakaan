@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Member;
+use App\Http\Requests\StoreMemberRequest;
+use function PHPUnit\Framework\returnArgument;
 
 class MemberController extends Controller
 {
@@ -17,7 +20,9 @@ class MemberController extends Controller
     ];
     public function index()
     {
-        $members = $this->members;
+        $members = Member::paginate(10);
+
+        $members = Member::when(request('search'), fn ($query, $search) => $query->where('nama', 'like', "%{$search}%"))->paginate(10);
 
         return view('members.index', compact('members'));
     }
@@ -27,15 +32,20 @@ class MemberController extends Controller
      */
     public function create()
     {
-        return "MemberController@create";
+        return view('members.create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreMemberRequest $request)
     {
-        return "MemberController@store";
+        $validated = $request->validated();
+
+        Member::create($validated);
+
+        return redirect()->route('members.index')
+        ->with('success', "Anggota \"{$validated['nama']}\" berhasil ditambahkan");
     }
 
     /**
@@ -51,15 +61,29 @@ class MemberController extends Controller
      */
     public function edit(string $id)
     {
-        return "MemberController@edit, id: {$id}";
+        $member = Member::findOrFail($id);
+        return view('members.edit', compact('member'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(StoreMemberRequest $request, string $id)
     {
-        return "MemberController@update, id: {$id}";
+        $member = Member::findOrFail($id);
+
+        $validated = $request->validate([
+            'nama' => 'required|string|max:100',
+            'nim' => 'required|string|max:100',
+            'email' => 'required|unique:members,email',
+            'nomor_telepon' => 'required|string|min:11',
+            'alamat' => 'required|string',
+            'status' => 'required|string|in:Aktif,Tidak Aktif'
+        ]);
+
+        $member->update($validated);
+        return redirect()->route('members.index')
+            ->with('success', "Kategori \"{$validated['nama']}\" berhasil diperbarui");
     }
 
     /**
@@ -67,6 +91,10 @@ class MemberController extends Controller
      */
     public function destroy(string $id)
     {
-        return "MemberController@destroy, id: {$id}";
+        $member = Member::findOrFail($id);
+        $member->delete();
+
+        return redirect()->route('members.index')
+            ->with('success', 'Anggota berhasil dihapus.');
     }
 }
